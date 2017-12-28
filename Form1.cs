@@ -12,8 +12,9 @@ namespace Euler393
 {
     public partial class Form1 : Form
     {
-        const int sz = 6;
+        const int sz = 4;
         Stopwatch sw;
+        Dictionary<string, long[]> dict = new Dictionary<string, long[]>();
 
         public Form1()
         {
@@ -22,19 +23,38 @@ namespace Euler393
             TimeStart();
 
             bool[,] board = new bool[sz, sz];
-            long res = BuildFrom(new Point(0, 0), board, 0);
+            long[] ar = BuildFrom(new Point(0, 0), board, 0);
 
+            long res = 0;
+            for (int i = 0; i <= sz; i++)
+            {
+                res += (long)Math.Pow(2, ar[i]);
+            }
             textBox1.Text = res.ToString();
             label1.Text = TimeStop();
         }
 
-        long BuildFrom(Point st, bool[,] bd, int ct)
+        long[] BuildFrom(Point st, bool[,] bd, int ct)
         {
+            string k = "";
+            if (ct > 0)
+            {
+                for (int y = 0; y + 1 < sz; y++)
+                {
+                    for (int x = 0; x + 1 < sz; x++)
+                    {
+                        k += (bd[x, y] ? "1" : "0");
+                    }
+                }
+                if (dict.ContainsKey(k)) return dict[k];
+            }
+
             bool[,] pc = new bool[sz, sz];
             pc[st.X, st.Y] = true;
             pc[st.X + 1, st.Y] = true;
             Point targ = new Point(st.X, st.Y + 1);
-            long ans = MakeLoops(ct, bd, pc, new Point(st.X, st.Y + 1), new Point(st.X + 1, st.Y));
+            long[] ans = MakeLoops(ct, bd, pc, new Point(st.X, st.Y + 1), new Point(st.X + 1, st.Y));
+            if (ct > 0) dict.Add(k, ans);
             return ans;
         }
 
@@ -96,9 +116,9 @@ namespace Euler393
             return new Point(-1, -1);
         }
 
-        long MakeLoops(int ct, bool[,] bd, bool[,] pc, Point target, Point curr)
+        long[] MakeLoops(int ct, bool[,] bd, bool[,] pc, Point target, Point curr)
         {
-            long ans = 0;
+            long[] ans = new long[sz + 1];
             for (int d = 1; d < 5; d++)
             {
                 bool ok = true;
@@ -157,19 +177,19 @@ namespace Euler393
                                 else allFull = false;
                             }
                         }
-                        if (allFull) // packed the whole board
-                        {
-                            ans += (long)Math.Pow(2, nct);
-                            return ans;
-                        }
-
-                        if (StillOkay(nbd)) // space left and all squares have at least 2 approaches
+                        if (allFull) ans[1]++; // packed the whole board
+                        else if (StillOkay(nbd)) // space left and all squares have at least 2 approaches
                         {
                             Point p = FindOpening(nbd);
-                            ans += BuildFrom(p, nbd, nct);
+                            long[] wk = BuildFrom(p, nbd, nct);
+                            for (int i = 2; i <= sz; i++) ans[i] += wk[i - 1];
                         }
                     }
-                    else ans += MakeLoops(ct, bd, npc, target, w);
+                    else
+                    {
+                        long[] wk = MakeLoops(ct, bd, npc, target, w);
+                        for (int i = 2; i <= sz; i++) ans[i] += wk[i - 1];
+                    }
                 }
             }
             return ans;
