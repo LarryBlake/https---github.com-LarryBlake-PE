@@ -23,8 +23,8 @@ namespace Euler393
             this.Show();
             TimeStart();
 
-            bool[,] board = new bool[sz, sz];
-            long[] ar = BuildFrom(new Point(0, 0), board);
+            BitArray board = new BitArray(sz * sz);
+            long[] ar = BuildFrom(0, board);
 
             long res = 0;
             for (int i = 0; i < ar.Length; i++)
@@ -35,65 +35,59 @@ namespace Euler393
             label1.Text = TimeStop();
         }
 
-        long[] BuildFrom(Point st, bool[,] bd)
+        long[] BuildFrom(int st, BitArray bd)
         {
-            BitArray k = new BitArray(sz * sz);
-            for (int y = 0; y < sz; y++)
-            {
-                for (int x = 0; x < sz; x++)
-                {
-                    k[(sz * y) + x] = bd[x, y];
-                }
-            }
-            if (dict.ContainsKey(k)) return dict[k];
+            if (dict.ContainsKey(bd)) return dict[bd];
 
-            bool[,] pc = new bool[sz, sz];
-            pc[st.X, st.Y] = true;
-            pc[st.X + 1, st.Y] = true;
-            Point targ = new Point(st.X, st.Y + 1);
-            long[] ans = MakeLoops(bd, pc, new Point(st.X, st.Y + 1), new Point(st.X + 1, st.Y));
-            dict.Add(k, ans);
+            BitArray pc = new BitArray(sz * sz);
+            pc[st] = true;
+            pc[st + 1] = true;
+            int targ = st + sz;
+            long[] ans = MakeLoops(bd, pc, targ, st + 1);
+            dict.Add(bd, ans);
             return ans;
         }
 
-        bool StillOkay(bool[,] bd)
+        bool StillOkay(BitArray bd)
         {
             for (int y = 0; y < sz; y++)
             {
                 for (int x = 0; x < sz; x++)
                 {
-                    if (!bd[x, y])
+                    int w = y * sz + x;
+                    if (!bd[w])
                     {
                         int c = 0;
-                        if (x + 1 < sz && !bd[x + 1, y]) c++;
-                        if (y + 1 < sz && !bd[x, y + 1]) c++;
-                        if (x > 0 && !bd[x - 1, y]) c++;
-                        if (y > 0 && !bd[x, y - 1]) c++;
+                        if (x + 1 < sz && !bd[w + 1]) c++;
+                        if (y + 1 < sz && !bd[w + sz]) c++;
+                        if (x > 0 && !bd[w - 1]) c++;
+                        if (y > 0 && !bd[w - sz]) c++;
                         if (c < 2) return false;
                     }
                 }
             }
             return true;
         }
-        bool StillOkayWIP(bool[,] bd, bool[,] bd2, Point curr, Point target)
+        bool StillOkayWIP(BitArray bd, BitArray bd2, int curr, int target)
         {
             for (int y = 0; y < sz; y++)
             {
                 for (int x = 0; x < sz; x++)
                 {
-                    if (!bd[x, y] && !bd2[x, y])
+                    int w = y * sz + x;
+                    if (!bd[w] && !bd2[w])
                     {
                         int c = 0;
-                        if (x + 1 < sz && !bd[x + 1, y] && !bd2[x + 1, y]) c++;
-                        if (y + 1 < sz && !bd[x, y + 1] && !bd2[x, y + 1]) c++;
-                        if (x > 0 && !bd[x - 1, y] && !bd2[x - 1, y]) c++;
-                        if (y > 0 && !bd[x, y - 1] && !bd2[x, y - 1]) c++;
+                        if (x + 1 < sz && !bd[w + 1] && !bd2[w + 1]) c++;
+                        if (y + 1 < sz && !bd[w + sz] && !bd2[w + sz]) c++;
+                        if (x > 0 && !bd[w - 1] && !bd2[w - 1]) c++;
+                        if (y > 0 && !bd[w - sz] && !bd2[w - sz]) c++;
                         if (c < 2)
                         {
-                            if (curr.X == x && curr.Y == y) ;
-                            else if (target.X == x && target.Y == y && c == 1) ;
-                            else if (curr.X == x && Math.Abs(curr.Y - y) == 1) ;
-                            else if (curr.Y == y && Math.Abs(curr.X - x) == 1) ;
+                            if (curr == w) ;
+                            else if (target == w && c == 1) ;
+                            else if (curr % sz == x && Math.Abs((curr / sz) - y) == 1) ;
+                            else if (curr / sz == y && Math.Abs((curr % sz) - x) == 1) ;
                             else return false;
                         }
                     }
@@ -101,50 +95,51 @@ namespace Euler393
             }
             return true;
         }
-        Point FindOpening(bool[,] bd)
+        int FindOpening(BitArray bd)
         {
-            bool[,] pc = new bool[sz, sz];
+            BitArray pc = new BitArray(sz * sz);
             for (int y = 0; y + 1 < sz; y++)
             {
                 for (int x = 0; x + 1 < sz; x++)
                 {
-                    if (!bd[x, y] && !bd[x + 1, y] && !bd[x, y + 1]) return new Point(x, y);
+                    int i = (y * sz) + x;
+                    if (!bd[i] && !bd[i + 1] && !bd[i + sz]) return i;
                 }
             }
-            return new Point(-1, -1);
+            return -1;
         }
 
-        long[] MakeLoops(bool[,] bd, bool[,] pc, Point target, Point curr)
+        long[] MakeLoops(BitArray bd, BitArray pc, int target, int curr)
         {
             long[] ans = new long[(sz * sz / 4) + 1];
             for (int d = 1; d < 5; d++)
             {
                 bool ok = true;
 
-                Point w = new Point(curr.X, curr.Y);
+                int w = curr;
                 if (d == 1) // right
                 {
-                    if (w.X + 1 == sz) ok = false;
-                    else w.X++;
+                    if ((w + 1) % sz == 0) ok = false;
+                    else w++;
                 }
                 else if (d == 2) // down
                 {
-                    if (w.Y + 1 == sz) ok = false;
-                    else w.Y++;
+                    if ((w / sz) + 1 == sz) ok = false;
+                    else w += sz;
                 }
                 else if (d == 3) // left
                 {
-                    if (w.X == 0) ok = false;
-                    else w.X--;
+                    if (w % sz == 0) ok = false;
+                    else w--;
                 }
                 else // up
                 {
-                    if (w.Y == 0) ok = false;
-                    else w.Y--;
+                    if (w / sz == 0) ok = false;
+                    else w -= sz;
                 }
                 if (ok) // is this an empty cell?
                 {
-                    if (bd[w.X, w.Y] || pc[w.X, w.Y]) ok = false;
+                    if (bd[w] || pc[w]) ok = false;
                 }
                 if (ok) // any unreachables created?
                 {
@@ -153,31 +148,22 @@ namespace Euler393
 
                 if (ok) // this direction is legitimate
                 {
-                    bool[,] npc = new bool[sz, sz];
-                    for (int y = 0; y < sz; y++)
-                    {
-                        for (int x = 0; x < sz; x++)
-                        {
-                            npc[x, y] = pc[x, y];
-                        }
-                    }                        
-                    npc[w.X, w.Y] = true;
-                    if (w.X == target.X && w.Y == target.Y) // closed the loop
+                    BitArray npc = new BitArray(sz * sz);
+                    for (int i = 0; i < npc.Length; i++) npc[i] = pc[i];
+                    npc[w] = true;
+                    if (w == target) // closed the loop
                     {
                         bool allFull = true;
-                        bool[,] nbd = new bool[sz, sz];
-                        for (int y = 0; y < sz; y++)
+                        BitArray nbd = new BitArray(sz * sz);
+                        for (int i = 0; i < npc.Length; i++) 
                         {
-                            for (int x = 0; x < sz; x++)
-                            {
-                                if (bd[x, y] || npc[x, y]) nbd[x, y] = true;
-                                else allFull = false;
-                            }
+                            if (bd[i] || npc[i]) nbd[i] = true;
+                            else allFull = false;
                         }
                         if (allFull) ans[1]++; // packed the whole board
                         else if (StillOkay(nbd)) // space left and all squares have at least 2 approaches
                         {
-                            Point p = FindOpening(nbd);
+                            int p = FindOpening(nbd);
                             long[] wk = BuildFrom(p, nbd);
                             for (int i = 2; i < wk.Length; i++) ans[i] += wk[i - 1];
                         }
