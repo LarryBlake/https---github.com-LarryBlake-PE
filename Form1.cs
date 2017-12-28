@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,9 +13,9 @@ namespace Euler393
 {
     public partial class Form1 : Form
     {
-        const int sz = 8;
+        const int sz = 6;
         Stopwatch sw;
-        Dictionary<string, long[]> dict = new Dictionary<string, long[]>();
+        Dictionary<BitArray, long[]> dict = new Dictionary<BitArray, long[]>();
 
         public Form1()
         {
@@ -36,12 +37,12 @@ namespace Euler393
 
         long[] BuildFrom(Point st, bool[,] bd)
         {
-            string k = "";
+            BitArray k = new BitArray(sz * sz);
             for (int y = 0; y < sz; y++)
             {
                 for (int x = 0; x < sz; x++)
                 {
-                    k += (bd[x, y] ? "1" : "0");
+                    k[(sz * y) + x] = bd[x, y];
                 }
             }
             if (dict.ContainsKey(k)) return dict[k];
