@@ -15,7 +15,7 @@ namespace Euler393
     {
         const int sz = 6;
         Stopwatch sw;
-        Dictionary<BitArray, long[]> dict = new Dictionary<BitArray, long[]>();
+        //Dictionary<BitArray, long[]> dict = new Dictionary<BitArray, long[]>();
 
         public Form1()
         {
@@ -37,14 +37,14 @@ namespace Euler393
 
         long[] BuildFrom(int st, BitArray bd)
         {
-            if (dict.ContainsKey(bd)) return dict[bd];
+            //if (dict.ContainsKey(bd)) return dict[bd];
 
             BitArray pc = new BitArray(sz * sz);
             pc[st] = true;
             pc[st + 1] = true;
             int targ = st + sz;
             long[] ans = MakeLoops(bd, pc, targ, st + 1);
-            dict.Add(bd, ans);
+            //dict.Add(bd, ans);
             return ans;
         }
 
