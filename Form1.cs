@@ -12,8 +12,7 @@ namespace Euler393
 {
     public partial class Form1 : Form
     {
-        const int sz = 10;
-        long res = 0;
+        const int sz = 6;
         Stopwatch sw;
 
         public Form1()
@@ -23,19 +22,20 @@ namespace Euler393
             TimeStart();
 
             bool[,] board = new bool[sz, sz];
-            BuildFrom(new Point(0, 0), board, 0);
+            long res = BuildFrom(new Point(0, 0), board, 0);
 
             textBox1.Text = res.ToString();
             label1.Text = TimeStop();
         }
 
-        void BuildFrom(Point st, bool[,] bd, int ct)
+        long BuildFrom(Point st, bool[,] bd, int ct)
         {
             bool[,] pc = new bool[sz, sz];
             pc[st.X, st.Y] = true;
             pc[st.X + 1, st.Y] = true;
             Point targ = new Point(st.X, st.Y + 1);
-            MakeLoops(ct, bd, pc, new Point(st.X, st.Y + 1), new Point(st.X + 1, st.Y));
+            long ans = MakeLoops(ct, bd, pc, new Point(st.X, st.Y + 1), new Point(st.X + 1, st.Y));
+            return ans;
         }
 
         bool StillOkay(bool[,] bd)
@@ -96,8 +96,9 @@ namespace Euler393
             return new Point(-1, -1);
         }
 
-        void MakeLoops(int ct, bool[,] bd, bool[,] pc, Point target, Point curr)
+        long MakeLoops(int ct, bool[,] bd, bool[,] pc, Point target, Point curr)
         {
+            long ans = 0;
             for (int d = 1; d < 5; d++)
             {
                 bool ok = true;
@@ -156,16 +157,22 @@ namespace Euler393
                                 else allFull = false;
                             }
                         }
-                        if (allFull) res += (long)Math.Pow(2, nct); // packed the whole board
-                        else if (StillOkay(nbd)) // space left and all squares have at least 2 approaches
+                        if (allFull) // packed the whole board
+                        {
+                            ans += (long)Math.Pow(2, nct);
+                            return ans;
+                        }
+
+                        if (StillOkay(nbd)) // space left and all squares have at least 2 approaches
                         {
                             Point p = FindOpening(nbd);
-                            BuildFrom(p, nbd, nct);
+                            ans += BuildFrom(p, nbd, nct);
                         }
                     }
-                    else MakeLoops(ct, bd, npc, target, w);
+                    else ans += MakeLoops(ct, bd, npc, target, w);
                 }
             }
+            return ans;
         }
 
         void TimeStart()
