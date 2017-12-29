@@ -13,9 +13,9 @@ namespace Euler393
 {
     public partial class Form1 : Form
     {
-        const int sz = 6;
+        const int sz = 8;
         Stopwatch sw;
-        //Dictionary<BitArray, long[]> dict = new Dictionary<BitArray, long[]>();
+        Dictionary<BitArray, long[]> dict = new Dictionary<BitArray, long[]>();
 
         public Form1()
         {
@@ -24,7 +24,7 @@ namespace Euler393
             TimeStart();
 
             BitArray board = new BitArray(sz * sz);
-            long[] ar = BuildFrom(0, board);
+            long[] ar = BuildFrom(0, board, 0);
 
             long res = 0;
             for (int i = 0; i < ar.Length; i++)
@@ -35,16 +35,16 @@ namespace Euler393
             label1.Text = TimeStop();
         }
 
-        long[] BuildFrom(int st, BitArray bd)
+        long[] BuildFrom(int st, BitArray bd, int ct)
         {
-            //if (dict.ContainsKey(bd)) return dict[bd];
+            if (dict.ContainsKey(bd)) return dict[bd];
 
             BitArray pc = new BitArray(sz * sz);
             pc[st] = true;
             pc[st + 1] = true;
             int targ = st + sz;
-            long[] ans = MakeLoops(bd, pc, targ, st + 1);
-            //dict.Add(bd, ans);
+            long[] ans = MakeLoops(bd, pc, targ, st + 1, ct);
+            if (ct > 8) dict.Add(bd, ans);
             return ans;
         }
 
@@ -109,10 +109,10 @@ namespace Euler393
             return -1;
         }
 
-        long[] MakeLoops(BitArray bd, BitArray pc, int target, int curr)
+        long[] MakeLoops(BitArray bd, BitArray pc, int target, int curr, int ct)
         {
             long[] ans = new long[(sz * sz / 4) + 1];
-            for (int d = 1; d < 5; d++)
+            for (int d = 4; d > 0; d--)
             {
                 bool ok = true;
 
@@ -164,14 +164,14 @@ namespace Euler393
                         else if (StillOkay(nbd)) // space left and all squares have at least 2 approaches
                         {
                             int p = FindOpening(nbd);
-                            long[] wk = BuildFrom(p, nbd);
-                            for (int i = 2; i < wk.Length; i++) ans[i] += wk[i - 1];
+                            long[] wk = BuildFrom(p, nbd, ct + 1);
+                            for (int i = 2; i + ct < wk.Length; i++) ans[i] += wk[i - 1];
                         }
                     }
                     else
                     {
-                        long[] wk = MakeLoops(bd, npc, target, w);
-                        for (int i = 1; i < ans.Length; i++) ans[i] += wk[i];
+                        long[] wk = MakeLoops(bd, npc, target, w, ct);
+                        for (int i = 1; i + ct < ans.Length; i++) ans[i] += wk[i];
                     }
                 }
             }
